@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% block content %}
+    <style>
+        .column_string {
+            margin-bottom: 20px !important;
+        }
+    </style>
+    <div class="row m-0 justify-content-between w-75">
+        <div class="p-0 col-6">
+            <h2>New Schema</h2>
+        </div>
+        <div class="p-0 col-6" style="text-align: right">
+            <button class="btn btn-primary" id="save_data">Submit</button>
+        </div>
+    </div>
+    <div class="w-50">
+        <form id="formSchema">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="name_schema" class="form-label">Name</label>
+                <input type="text" required name="name" class="form-control" id="name_schema" value="{{ schema.name }}">
+            </div>
+            <div class="form-group">
+                <label for="separator_schema" class="form-label">Column separator</label>
+                <select class="form-select" required name="separator_id" id="separator_schema">
+                    <option value="">---</option>
+                    {% for sep in list_separator %}
+                        <option value="{{ sep.id }}" {% if sep.id == schema.separator_id.id %}
+                                selected {% endif %}>{{ sep.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="character_schema" class="form-label">String character</label>
+                <select class="form-select" required name="character_id" id="character_schema">
+                    <option value="">---</option>
+                    {% for ch in list_character %}
+                        <option value="{{ ch.id }}" {% if ch.id == schema.character_id.id %}
+                                selected {% endif %}>{{ ch.title }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+    <div class="row m-0 justify-content-between w-75" style="padding: 25px 0">
+        <h2>Schema columns</h2>
+        <div id="list_columns">
+            {% for col in list_column %}
+                <div class="row m-0  column_string" id="column_{{ forloop.counter0 }}">
+                    <div class="form-group col-3">
+                        <label class="form-label">Column name</label>
+                        <input type="text" name="column_name" class="form-control column_name"
+                               value="{{ col.name_column }}">
+                    </div>
+                    <div class="form-group col-3">
+                        <label class="form-label">Type</label>
+                        <select class="form-select column_type" name="column_type">
+                            <option value="">---</option>
+                            {% for type in list_type %}
+                                <option value="{{ type.id }}" {% if col.type_field_id.id == type.id %}
+                                        selected {% endif %}>{{ type.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-3">
+                        <div class="if_integer row m-0 {% if col.type_field_id.id != 8 %} d-none {% endif %}">
+                            <div class="form-group col-5">
+                                <label for="column_from_int" class="form-label">From</label>
+                                <input type="number" name="column_from_int"
+                                       class="form-control column_from_int"
+                                       value="{{ col.from_value }}">
+                            </div>
+                            <div class="form-group col-5">
+                                <label for="column_to_int" class="form-label">To</label>
+                                <input type="number" name="column_to_int"
+                                       class="form-control column_to_int"
+                                       value="{{ col.to_value }}">
+                            </div>
+                        </div>
+                        <div class="if_text row m-0 {% if col.type_field_id.id != 7 %} d-none {% endif %}">
+                            <div class="form-group col-10">
+                                <label for="column_maxLength" class="form-label">Max length</label>
+                                <input type="number" name="column_maxLength"
+                                       class="form-control column_maxLength"
+                                       value="{{ col.to_value }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3 row m-0">
+                        <div class="form-group col-8">
+                            <label class="form-label">Order</label>
+                            <input type="number" readonly name="column_order" class="form-control column_order"
+                                   value="{{ forloop.counter0 }}">
+                        </div>
+                        <div class="col-4 row m-0 justify-content-center align-items-center">
+                            <span style="color:red; cursor: pointer" class="delete_elem">Delete</span>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="card p-0">
+            <div class="card-body">
+                <form id="newColumn">
+                    <div class="row m-0 column_string">
+                        <div class="form-group col-3">
+                            <label for="column_name" class="form-label">Column name</label>
+                            <input type="text" name="column_name" id="column_name" class="form-control">
+                        </div>
+                        <div class="form-group col-3">
+                            <label for="column_type" class="form-label">Type</label>
+                            <select class="form-select column_type" name="column_type" id="column_type">
+                                <option value="">---</option>
+                                {% for type in list_type %}
+                                    <option value="{{ type.id }}">{{ type.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-3" id="if_block">
+                            <div class="if_integer row m-0 d-none">
+                                <div class="form-group col-5">
+                                    <label for="column_from_int" class="form-label">From</label>
+                                    <input type="number" name="column_from_int" id="column_from_int"
+                                           class="form-control"
+                                           value="0">
+                                </div>
+                                <div class="form-group col-5">
+                                    <label for="column_to_int" class="form-label">To</label>
+                                    <input type="number" name="column_to_int" id="column_to_int"
+                                           class="form-control"
+                                           value="100">
+                                </div>
+                            </div>
+                            <div class="if_text row m-0 d-none">
+                                <div class="form-group col-10">
+                                    <label for="column_maxLength" class="form-label">Max length</label>
+                                    <input type="number" name="column_maxLength" id="column_maxLength"
+                                           class="form-control"
+                                           value="50">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3 row m-0">
+                            <div class="form-group col-8">
+                                <label for="column_order" class="form-label">Order</label>
+                                <input type="number" readonly name="column_order" id="column_order" class="form-control"
+                                       value="{{ list_column|length }}">
+                            </div>
+                            <div class="col-4 row m-0 justify-content-center align-items-center">
+                                <span style="color:red;">Delete</span>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <button class="btn btn-primary m-3" id="add_column">Add column</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block script %}
+    <script>
+        let column_order = parseInt({{ list_column|length }})
+        $("#save_data").click(function () {
+            let data = getFormData($("#formSchema"))
+            if (data.status && $("#list_columns").children().length > 0) {
+                let id = new URL(location.href)
+                if (id.searchParams.get('id') === null) {
+                    $.post('/schema', data.data, function (resp) {
+                        return resp;
+                    }).done(function (data) {
+                        save_column(data)
+                        window.location = '/'
+                    })
+                } else {
+                    $.ajax({
+                        'url': '/schema',
+                        'method': "PUT",
+                        'data': $("#formSchema").serialize() + '&id=' + id.searchParams.get('id'),
+                        beforeSend: function (xhr) {
+                            xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+                        },
+                        success: function (resp) {
+                            if (resp.status === 200) {
+                                save_column({'id': id.searchParams.get('id')})
+                                window.location = '/schema?id=' + id.searchParams.get('id')
+                            }
+                        }
+                    })
+                }
+            } else {
+                alert('Заполните все поля')
+            }
+        })
+
+        function getFormData($form) {
+            let unindexed_array = $form.serializeArray();
+            let indexed_array = {};
+            let error = true;
+            $.map(unindexed_array, function (n, i) {
+                if (n['value'] === '') {
+                    error = false
+                }
+                indexed_array[n['name']] = n['value'];
+            });
+
+            return {
+                'status': error, "data": indexed_array
+            }
+        }
+
+        function save_column(data) {
+            let id = data.id
+            let resp_dict = []
+            $("#list_columns").children().each((idx, elem) => {
+                let type_ = $(elem).find('select.column_type').val()
+                let from_, to_;
+                if (type_ === '7') {
+                    from_ = 0
+                    to_ = $(elem).find('input.column_maxLength').val()
+                } else if (type_ === '8') {
+                    from_ = $(elem).find('input.column_from_int').val()
+                    to_ = $(elem).find('input.column_to_int').val()
+                } else {
+                    from_ = 0
+                    to_ = 0
+                }
+                resp_dict.push({
+                    "name_column": $(elem).find('input.column_name').val(),
+                    "schema_id": id,
+                    "type_field_id": type_,
+                    "to_value": to_,
+                    "from_value": from_
+                })
+
+            })
+            $.post('/add_column',
+                {
+                    "data": JSON.stringify(resp_dict),
+                    "csrfmiddlewaretoken": '{{csrf_token}}'
+                },
+                function (resp) {
+                    if (resp.status === 200) {
+                        {#window.location = '/'#}
+
+                    }
+                })
+        }
+
+        function change_status(that) {
+            if (that.value === '7') {
+                $(that).parents('div.column_string').find('div.if_text').removeClass('d-none')
+                $(that).parents('div.column_string').find('div.if_integer').addClass('d-none')
+            } else if (that.value === '8') {
+                $(that).parents('div.column_string').find('div.if_integer').removeClass('d-none')
+                $(that).parents('div.column_string').find('div.if_text').addClass('d-none')
+            } else {
+                $(that).parents('div.column_string').find('div.if_integer').addClass('d-none')
+                $(that).parents('div.column_string').find('div.if_text').addClass('d-none')
+            }
+        }
+
+        $(".column_type").change(function () {
+            change_status(this)
+        })
+
+        $("#add_column").click(function () {
+            let data = getFormData($("#newColumn"))
+            if (data.status) {
+                console.log(data);
+                // TODO: HARDKODE
+                let new_column = $(`
+                    <div class="row m-0 d-none column_string" id="column_example">
+                        <div class="form-group col-3">
+                            <label class="form-label">Column name</label>
+                            <input type="text" name="column_name" class="form-control column_name">
+                        </div>
+                        <div class="form-group col-3">
+                            <label class="form-label">Type</label>
+                            <select class="form-select column_type" name="column_type">
+                                <option value="">---</option>
+                                {% for type in list_type %}
+                                    <option value="{{ type.id }}">{{ type.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-3">
+                            <div class="if_integer row m-0 d-none">
+                                <div class="form-group col-5">
+                                    <label for="column_from_int" class="form-label">From</label>
+                                    <input type="number" name="column_from_int"
+                                           class="form-control column_from_int"
+                                           value="0">
+                                </div>
+                                <div class="form-group col-5">
+                                    <label for="column_to_int" class="form-label">To</label>
+                                    <input type="number" name="column_to_int"
+                                           class="form-control column_to_int"
+                                           value="100">
+                                </div>
+                            </div>
+                            <div class="if_text row m-0 d-none">
+                                <div class="form-group col-10">
+                                    <label for="column_maxLength" class="form-label">Max length</label>
+                                    <input type="number" name="column_maxLength"
+                                           class="form-control column_maxLength"
+                                           value="50">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3 row m-0">
+                            <div class="form-group col-8">
+                                <label class="form-label">Order</label>
+                                <input type="number" readonly name="column_order" class="form-control column_order" value="0">
+                            </div>
+                            <div class="col-4 row m-0 justify-content-center align-items-center">
+                                <span style="color:red; cursor: pointer" class="delete_elem">Delete</span>
+                            </div>
+                        </div>
+                    </div>
+                `)
+                // TODO: HARDKODE
+                console.log(new_column);
+                $(new_column).removeClass('d-none')
+                $(new_column).attr('id', 'column_' + data.data.column_order)
+                $(new_column).find('input.column_name').val(data.data.column_name)
+                $(new_column).find('select.column_type').val(data.data.column_type)
+                if (data.data.column_type === '8') {
+                    $(new_column).find('div.if_integer').removeClass('d-none')
+                    $(new_column).find('div.if_integer').find('input.column_from_int').val(data.data.column_from_int)
+                    $(new_column).find('div.if_integer').find('input.column_to_int').val(data.data.column_to_int)
+                } else if (data.data.column_type === '7') {
+                    $(new_column).find('div.if_text').removeClass('d-none')
+                    $(new_column).find('div.if_text').find('input.column_maxLength').val(data.data.column_maxLength)
+                }
+                $(new_column).find('input.column_order').val(data.data.column_order)
+                $(new_column).find('span.delete_elem').click(function () {
+                    delete_string(this)
+                })
+                $(new_column).find('select.column_type').change(function () {
+                    change_status(this)
+                })
+                console.log(new_column);
+                $("#list_columns").append($(new_column))
+                column_order += 1
+                $("#column_name").val('')
+                $("#column_type").val('')
+                $("#column_order").val(column_order)
+                $('#if_block').find('div.if_integer').addClass('d-none')
+                $('#if_block').find('div.if_text').addClass('d-none')
+            } else {
+                alert('Заполните все поля')
+            }
+        })
+
+        $('.delete_elem').click(function () {
+            delete_string(this)
+        })
+
+        function delete_string(that) {
+            let now_order = $(that).parents('div.column_string').attr('id').split('_')[1]
+            $(".column_string").each((idx, elem) => {
+                if (elem.id.split("_")[1] > now_order) {
+                    console.log(now_order);
+                    elem.id = 'column_' + (parseInt(elem.id.split("_")[1]) - 1).toString()
+                    $(elem).find('input.column_order').val(parseInt(elem.id.split("_")[1]))
+                }
+            })
+            column_order -= 1
+            $("#column_order").val(column_order)
+            console.log($(that));
+            $(that).parents('div.column_string').remove()
+        }
+    </script>
+{% endblock %}

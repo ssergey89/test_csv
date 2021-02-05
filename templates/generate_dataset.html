@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="row m-0 justify-content-between w-75">
+        <div class="p-0 col-6">
+            <h2>Data sets</h2>
+        </div>
+        <div class="p-0 col-6 row m-0 justify-content-end align-items-center">
+            <div class="col-2 p-0" style="text-align: right">
+                <label for="count_rows">Rows: </label>
+            </div>
+            <div class="col-3 p-0">
+                <input type="text" id="count_rows" class="form-control">
+            </div>
+            <div class="col-3">
+                <button class="btn btn-success" style="height: 35px" id="new_file">New schema</button>
+            </div>
+        </div>
+    </div>
+    <table class="table table-bordered w-75">
+        <thead>
+        <tr>
+            <th>
+                #
+            </th>
+            <th>
+                Created
+            </th>
+            <th>
+                Status
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for elem in queryset %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ elem.date|date:"Y-m-d" }}</td>
+                <td>{% if elem.status %} <button class="btn btn-success" disabled>Active</button>{% else %} <button class="btn btn-secondary">Pending</button>{% endif %}</td>
+                <td>
+                    {% if elem.status %} <a href="/download_file?id={{ elem.id }}">Download</a>{% endif %}
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+{% block script %}
+    <script>
+        $("#new_file").click(function () {
+            let id = new URL(location.href)
+            $.ajax({
+                'url': '/generate',
+                'method': "POST",
+                'data': {'id': id.searchParams.get('id'), 'count_rows': $("#count_rows").val()},
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("X-CSRFToken", '{{csrf_token}}');
+                },
+                success: function (resp) {
+                    if (resp.status === 200) {
+                        location.reload()
+                    }
+                }
+            })
+        })
+    </script>
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block content %}
+    <div class="row m-0 justify-content-between w-75">
+        <div class="p-0 col-6">
+            <h2>Data Schemas</h2>
+        </div>
+        <div class="p-0 col-6" style="text-align: right">
+            <button class="btn btn-success" onclick="window.location = '/schema'">New schema</button>
+        </div>
+    </div>
+    <table class="table table-bordered w-75">
+        <thead>
+        <tr>
+            <th>
+                #
+            </th>
+            <th>
+                Title
+            </th>
+            <th>
+                Modified
+            </th>
+            <th>
+                Actions
+            </th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for elem in queryset %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td><a href="/generate?id={{ elem.id }}">{{ elem.name }}</a></td>
+                <td>{{ elem.modified|date:"Y-m-d" }}</td>
+                <td>
+                    <span style="color: #0b5ed7;cursor: pointer" onclick="window.location = '/schema?id={{ elem.id }}'">Edit scheme</span>
+                    <span style="color:red; cursor: pointer" class="delete_schema"
+                          id="delete_{{ elem.id }}">Delete</span>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+{% block script %}
+    <script>
+        $(".delete_schema").click(function () {
+            let id = this.id.split('_')[1]
+            $.ajax({
+                'url': '/schema',
+                'method': "DELETE",
+                'data': {'id': id},
+                beforeSend: function (xhr) {
+                    xhr.setRequestHeader("X-CSRFToken",'{{csrf_token}}');
+                },
+                success: function (resp) {
+                    if (resp.status === 200){
+                        location.reload()
+                    }
+                }
+            })
+        })
+    </script>
+{% endblock %}
